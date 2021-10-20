@@ -1,0 +1,32 @@
+{
+  "name": "stock-price-checker",
+  "version": "1.0.0",
+  "description": "A microservice that checks the price of popular stocks and compares the prices of 2 stocs",
+  "main": "ks",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgomohC/stock-price-checker.git"
+  },
+  "keywords": [
+    "express",
+    "mongoose",
+    "dotenv",
+    "cors"
+  ],
+  "author": "Chinaemerem Agomoh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AgomohC/stock-price-checker/issues"
+  },
+  "homepage": "https://github.com/AgomohC/stock-price-checker#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "helmet": "^4.6.0",
+    "mongoose": "^6.0.11"
+  }
+}
