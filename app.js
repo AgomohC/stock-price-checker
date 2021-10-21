@@ -22,7 +22,7 @@ app.use(express.static("./public"));
 
 //model
 const stockSchema = new mongoose.Schema({
-  stock: String,
+  stock: { type: String, required: true },
   liked_by: Array,
   num_likes: { type: Number, default: 0 },
 });
@@ -35,10 +35,13 @@ app.get("/api/stock-prices", async (req, res) => {
   // check if there are 2 query parameters in the string
   if (Object.keys(req.query).length === 2) {
     // get the values of the stock and like from the req query
-    const { stock, like } = req.query;
+    const { stock1, like } = req.query;
+    if (!stock1 || !like) {
+      return res.status(400).send(`required inputs missing`);
+    }
 
     //stock api end point
-    const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${stock}/quote`;
+    const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${stock1}/quote`;
     try {
       //get request with axios library
       const response = await axios.get(url);
@@ -55,17 +58,19 @@ app.get("/api/stock-prices", async (req, res) => {
         //code block to execute if stock does not exist
         if (!isStock) {
           //create new stock
-          const newStock = await Stock.create({
+          await Stock.create({
             stock: symbol,
           });
           //json return
-          return res.status(200).json({ stock: symbol, price, likes: 0 });
+          return res
+            .status(200)
+            .json({ stockData: { stock: symbol, price, likes: 0 } });
         }
 
         // return if stock exists in the database
-        return res
-          .status(200)
-          .json({ stock: symbol, price, likes: isStock.num_likes });
+        return res.status(200).json({
+          stockData: { stock: symbol, price, likes: isStock.num_likes },
+        });
       } // code block to evaluate the client likes the stock
       else if (like === "true") {
         // find stock in database
@@ -74,14 +79,16 @@ app.get("/api/stock-prices", async (req, res) => {
         //code block to execute if stock does not exist in the database
         if (!isStock) {
           //create new stock and include the client's ip address in the liked_by array
-          const newStock = await Stock.create({
+          await Stock.create({
             stock: symbol,
             liked_by: [ip],
             num_likes: 1,
           });
 
           // json return
-          return res.status(200).json({ stock: symbol, price, likes: 1 });
+          return res
+            .status(200)
+            .json({ stockData: { stock: symbol, price, likes: 1 } });
         }
 
         //code block to evaluate if the stock exists in the database
@@ -96,7 +103,7 @@ app.get("/api/stock-prices", async (req, res) => {
           let newNoLikes = isStock.num_likes + 1;
 
           //update the stock to include the user's ip address and increment the number of likes the stock has
-          const stockUpdate = await Stock.findOneAndUpdate(
+          await Stock.findOneAndUpdate(
             { stock: symbol },
             { liked_by: newLiked_by, num_likes: newNoLikes },
             { new: true }
@@ -105,12 +112,12 @@ app.get("/api/stock-prices", async (req, res) => {
           //json return
           return res
             .status(200)
-            .json({ stock: symbol, price, likes: newNoLikes });
+            .json({ stockData: { stock: symbol, price, likes: newNoLikes } });
         }
         //code block to evaluate if the user has liked the stock before
-        return res
-          .status(200)
-          .json({ stock: symbol, price, likes: isStock.num_likes });
+        return res.status(200).json({
+          stockData: { stock: symbol, price, likes: isStock.num_likes },
+        });
       }
     } catch (error) {
       console.log(error.message);
@@ -118,6 +125,152 @@ app.get("/api/stock-prices", async (req, res) => {
     }
   } else {
     const { stock1, stock2, like } = req.query;
+
+    if (!stock1 || !stock2 || !like) {
+      return res.status(400).send(`required inputs missing`);
+    }
+    try {
+      //end points for fetching the data about the 2 stocks passed in
+      const url1 = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${stock1}/quote`;
+      const url2 = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${stock2}/quote`;
+
+      // fetch the stock data with axios library
+      const response1 = await axios.get(url1);
+      const response2 = await axios.get(url2);
+      const stockJSON1 = response1.data;
+      const stockJSON2 = response2.data;
+
+      // get the price and symbols of the two stock
+      const { iexRealtimePrice: price1, symbol: symbol1 } = stockJSON1;
+      const { iexRealtimePrice: price2, symbol: symbol2 } = stockJSON2;
+
+      //check if both stock exist in the database if they dont create a new entry with ths symbol passed in
+      const isStock1 =
+        (await Stock.findOne({ stock: symbol1 })) ||
+        (await Stock.create({ stock: symbol1 }));
+      const isStock2 =
+        (await Stock.findOne({ stock: symbol2 })) ||
+        (await Stock.create({ stock: symbol1 }));
+      // block of code to evaluate if the value of like is false
+
+      if (like === "false") {
+        // get the relative likes of the two stocks by subtracting the num likes of one from the other
+        let rel_likes1 = isStock1.num_likes - isStock2.num_likes;
+        let rel_likes2 = isStock2.num_likes - isStock1.num_likes;
+
+        //returned value
+        let returnedValue = {
+          stockData: [
+            { stock: symbol1, price: price1, rel_likes: rel_likes1 },
+            { stock: symbol2, price: price2, rel_likes: rel_likes2 },
+          ],
+        };
+
+        //json return
+        return res.status(200).json(returnedValue);
+      }
+      // block of code to evaluate if the value of like is true
+      else if (like === "true") {
+        //check if the user has liked the stock
+        const hasLiked1 = isStock1.liked_by.includes(ip);
+        const hasLiked2 = isStock2.liked_by.includes(ip);
+
+        //code block to execute if user has liked both stock before
+        if (hasLiked1 && hasLiked2) {
+          // get the relative likes of the two stocks by subtracting the num likes of one from the other
+
+          let rel_likes1 = isStock1.num_likes - isStock2.num_likes;
+          let rel_likes2 = isStock2.num_likes - isStock1.num_likes;
+          //returned value
+          let returnedValue = {
+            stockData: [
+              { stock: symbol1, price: price1, rel_likes: rel_likes1 },
+              { stock: symbol2, price: price2, rel_likes: rel_likes2 },
+            ],
+          };
+          return res.status(200).json(returnedValue);
+        }
+        //code block to execute if user has not liked either stock before
+        if (!hasLiked1 && !hasLiked2) {
+          // get the relative likes of the two stocks by subtracting the num likes of one from the other
+          let newLiked_by1 = [...isStock1.liked_by, ip];
+          let newNoLikes1 = isStock1.num_likes + 1;
+
+          await Stock.findOneAndUpdate(
+            { stock: symbol1 },
+            { liked_by: newLiked_by1, num_likes: newNoLikes1 },
+            { new: true }
+          );
+          let newLiked_by2 = [...isStock2.liked_by, ip];
+          let newNoLikes2 = isStock2.num_likes + 1;
+
+          //update the stock to include the user's ip address and increment the number of likes the stock has
+          await Stock.findOneAndUpdate(
+            { stock: symbol2 },
+            { liked_by: newLiked_by2, num_likes: newNoLikes2 },
+            { new: true }
+          );
+          let rel_likes1 = newNoLikes1 - newNoLikes2;
+          let rel_likes2 = newNoLikes2 - newNoLikes1;
+          //returned value
+          let returnedValue = {
+            stockData: [
+              { stock: symbol1, price: price1, rel_likes: rel_likes1 },
+              { stock: symbol2, price: price2, rel_likes: rel_likes2 },
+            ],
+          };
+          return res.status(200).json(returnedValue);
+        }
+        // block of code to execute if the user has not liked the first stock only
+        if (!hasLiked1) {
+          let newLiked_by1 = [...isStock1.liked_by, ip];
+          let newNoLikes1 = isStock1.num_likes + 1;
+
+          //update the stock to include the user's ip address and increment the number of likes the stock has
+          await Stock.findOneAndUpdate(
+            { stock: symbol1 },
+            { liked_by: newLiked_by1, num_likes: newNoLikes1 },
+            { new: true }
+          );
+          let rel_likes1 = newNoLikes1 - isStock2.num_likes;
+          let rel_likes2 = isStock2.num_likes - newNoLikes1;
+          let returnedValue = {
+            stockData: [
+              { stock: symbol1, price: price1, rel_likes: rel_likes1 },
+              { stock: symbol2, price: price2, rel_likes: rel_likes2 },
+            ],
+          };
+          return res.status(200).json(returnedValue);
+        }
+        if (!hasLiked2) {
+          let newLiked_by2 = [...isStock2.liked_by, ip];
+          let newNoLikes2 = isStock2.num_likes + 1;
+
+          //update the stock to include the user's ip address and increment the number of likes the stock has
+          await Stock.findOneAndUpdate(
+            { stock: symbol2 },
+            { liked_by: newLiked_by2, num_likes: newNoLikes2 },
+            { new: true }
+          );
+          let rel_likes2 = newNoLikes2 - isStock1.num_likes;
+          let rel_likes1 = isStock1.num_likes - newNoLikes2;
+          let returnedValue = {
+            stockData: [
+              { stock: symbol1, price: price1, rel_likes: rel_likes1 },
+              { stock: symbol2, price: price2, rel_likes: rel_likes2 },
+            ],
+          };
+          return res.status(200).json(returnedValue);
+        }
+        //json return
+        return res
+          .status(200)
+          .json({ stockData: { stock: symbol, price, likes: newNoLikes } });
+      }
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).type(text).send(`something went wrong`);
+    }
   }
 });
 
