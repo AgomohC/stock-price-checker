@@ -29,7 +29,11 @@ app.use(
   })
 );
 app.use(cors());
-app.use(express.static("./public"));
+app.get("/", (req, res) => {
+  res.send(
+    '<header><h1>Nasdaq Stock Price Checker</h1></header><h4><a href="#" target="_blank"> See Documentation <a> </h4>'
+  );
+});
 
 //model
 const stockSchema = new mongoose.Schema({
