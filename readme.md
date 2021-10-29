@@ -72,4 +72,4 @@ Note: "like" property in the request query can be true or false and it must be p
 
 ### Feedback!!
 
-I'd love your feedback on the API. You can reach me via [email](chinaemerema@gmail.com) or give me a shout out on [twitter](https://twitter.com/femto_ace?t=nk6ylNm1Zp2l0yiJkCKFeA&s=09)
+I'd love your feedback on the API. You can reach me via [email](mailto:chinaemerema@gmail.com) or give me a shout out on [twitter](https://twitter.com/femto_ace?t=nk6ylNm1Zp2l0yiJkCKFeA&s=09)
