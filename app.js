@@ -6,8 +6,9 @@ const helmet = require("helmet");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const axios = require("axios");
-const app = express();
+const rateLimit = require("express-rate-limit");
 
+const app = express();
 //middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -15,6 +16,16 @@ app.use(
   helmet.contentSecurityPolicy({
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'"],
+  })
+);
+// configure rate limiter for reverse proxies
+app.set("trust proxy", 1);
+
+//configure rate limiter to allow only 100 requests from a client every 15 minutes
+app.use(
+  rateLimit({
+    windowMS: 15 * 60 * 1000,
+    max: 100,
   })
 );
 app.use(cors());
