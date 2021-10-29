@@ -20,9 +20,9 @@
   "author": "Chinaemerem Agomoh",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/AgomohC/stock-price-checker/issues"
+    "url": "https://github.com/AgomohC/stock-price-checker#readme"
   },
-  "homepage": "https://github.com/AgomohC/stock-price-checker#readme",
+  "homepage": "https://femto-stock-price-checker.herokuapp.com/",
   "dependencies": {
     "axios": "^0.23.0",
     "cors": "^2.8.5",

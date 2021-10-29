@@ -31,7 +31,7 @@ app.use(
 app.use(cors());
 app.get("/", (req, res) => {
   res.send(
-    '<header><h1>Nasdaq Stock Price Checker</h1></header><h4><a href="#" target="_blank"> See Documentation <a> </h4>'
+    '<header><h1>Nasdaq Stock Price Checker</h1></header><h4><a href="https://github.com/AgomohC/stock-price-checker#readme" target="_blank"> See Documentation <a> </h4>'
   );
 });
 
