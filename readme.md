@@ -18,12 +18,10 @@ you can fetch data with any kind of methods you know(fetch API, Axios, jquery aj
 ### Check price of single stock and like
 
 ```js
-fetch("")
-  .then((res) =>
-    res.json(
-      "https://femto-stock-price-checker.herokuapp.com/api/stock-prices?stock1=nflx&like=true"
-    )
-  )
+fetch(
+  "https://femto-stock-price-checker.herokuapp.com/api/stock-prices?stock1=nflx&like=true"
+)
+  .then((res) => res.json())
   .then((json) => console.log(json));
 /*
   will return 
@@ -42,12 +40,10 @@ Note: "like" property in the request query can be true or false and it must be p
 ### Compare prices and relative likes of 2 stocks
 
 ```js
-fetch("")
-  .then((res) =>
-    res.json(
-      "https://femto-stock-price-checker.herokuapp.com/api/stock-prices?stock1=nflx&stock2=fb&like=true"
-    )
-  )
+fetch(
+  "https://femto-stock-price-checker.herokuapp.com/api/stock-prices?stock1=nflx&stock2=fb&like=true"
+)
+  .then((res) => res.json())
   .then((json) => console.log(json));
 
 /*
